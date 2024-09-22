@@ -1,0 +1,8 @@
+{
+    "editor.quickSuggestions": {
+        "strings": "on",
+        "comments": "on"
+    },
+    "editor.inlineSuggest.suppressSuggestions": true,
+    "editor.tabCompletion": "on"
+}
