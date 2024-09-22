@@ -25,7 +25,7 @@ defmodule PollingAppWeb.PollLive.Index do
 
   defp apply_action(socket, :new, _params) do
     current_user = socket.assigns.current_user
-    
+
     socket
     |> assign(:page_title, "New Poll")
     |> assign(:username, current_user.username)
@@ -52,7 +52,11 @@ defmodule PollingAppWeb.PollLive.Index do
   end
 
   @impl true
-  def handle_event("vote", %{"poll_id" => poll_id, "option" => option, "username" => username}, socket) do
+  def handle_event(
+        "vote",
+        %{"poll_id" => poll_id, "option" => option, "username" => username},
+        socket
+      ) do
     case Polls.vote(poll_id, option, username) do
       :ok -> {:noreply, assign(socket, :polls, Polls.list_polls())}
       :error -> {:noreply, socket}

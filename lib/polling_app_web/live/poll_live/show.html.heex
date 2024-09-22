@@ -11,14 +11,13 @@
 </.header>
 
 <.list>
-  <:item :for={option <- @poll.options}>
-    <%= option.value %>
-    <form phx-submit="vote">
-      <input type="hidden" name="poll_id" value={ @poll.id } />
-      <input type="hidden" name="option" value={ option.value } />
-      <input type="hidden" name="username" value={ @current_user.username } />
-      <button type="submit">Vote</button>
-    </form>
+  <:item :for={option <- @poll.options} title="Options">
+    <.form phx-submit="vote" class="flex gap-2">
+      <input type="hidden" name="poll_id" value={@poll.id} />
+      <.input type="text" name="option" value={option.value} />
+      <input type="hidden" name="username" value={@current_user.username} />
+      <.button type="submit">Vote</.button>
+    </.form>
   </:item>
 </.list>
 

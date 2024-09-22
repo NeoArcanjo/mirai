@@ -1,4 +1,5 @@
 defmodule PollingApp.Registry do
+  alias PollingApp.DataLayer
   use GenServer
 
   ## Client API
@@ -39,6 +40,10 @@ defmodule PollingApp.Registry do
   """
   def delete(server, key) do
     GenServer.cast(server, {:delete, key})
+  end
+
+  def list(server) do
+    GenServer.call(server, :list)
   end
 
   ## Server callbacks
@@ -84,6 +89,14 @@ defmodule PollingApp.Registry do
       :error ->
         {:noreply, {names, refs}}
     end
+  end
+
+  def handle_call(:list, _from, {names, _refs} = state) do
+    result =
+      :ets.tab2list(names)
+      |> Enum.map(fn {key, pid} -> {key, DataLayer.get(pid, key)} end)
+
+    {:reply, result, state}
   end
 
   @impl true

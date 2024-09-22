@@ -17,8 +17,7 @@ defmodule PollingApp.Polls do
 
   """
   def list_polls do
-    :ets.tab2list(:polls)
-    |> IO.inspect(label: "lib/polling_app/polls.ex:21")
+    Registry.list(:polls)
   end
 
   @doc """
@@ -36,7 +35,7 @@ defmodule PollingApp.Polls do
     Registry.lookup(:polls, id)
     |> case do
       :error -> nil
-      {:ok, pid} -> DataLayer.get(pid, id)   |> IO.inspect(label: "lib/polling_app/polls.ex:38")
+      {:ok, pid} -> DataLayer.get(pid, id)
     end
   end
 
