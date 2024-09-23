@@ -1,6 +1,7 @@
 defmodule PollingAppWeb.PollLive.FormComponent do
   use PollingAppWeb, :live_component
 
+  alias Phoenix.PubSub
   alias PollingApp.Polls
 
   @impl true
@@ -27,14 +28,21 @@ defmodule PollingAppWeb.PollLive.FormComponent do
           <.inputs_for :let={option} field={@form[:options]}>
             <input type="hidden" name="poll[options_sort][]" value={option.index} />
 
-            <.input field={option[:value]} type="text" placeholder="Option" />
-            <label>
-              <input type="checkbox" name="poll[options_drop][]" value={option.index} class="hidden" />
-              <.icon
-                name="hero-x-mark"
-                class="w-8 h-8 relative top-4 bg-red-500 hover:bg-red-700 hover:cursor-pointer"
-              />
-            </label>
+            <div class="flex items-center width-full">
+              <.input field={option[:value]} type="text" placeholder="Option" />
+              <label>
+                <input
+                  type="checkbox"
+                  name="poll[options_drop][]"
+                  value={option.index}
+                  class="hidden"
+                />
+                <.icon
+                  name="hero-x-mark"
+                  class="w-8 h-8 relative top-4 bg-red-500 hover:bg-red-700 hover:cursor-pointer"
+                />
+              </label>
+            </div>
           </.inputs_for>
         </div>
 
@@ -81,6 +89,8 @@ defmodule PollingAppWeb.PollLive.FormComponent do
     case Polls.update_poll(socket.assigns.poll, poll_params) do
       {:ok, poll} ->
         notify_parent({:saved, poll})
+        notify_subscribers("polls:#{poll.id}", {:updated, poll})
+        notify_subscribers("polls", :updated)
 
         {:noreply,
          socket
@@ -96,6 +106,8 @@ defmodule PollingAppWeb.PollLive.FormComponent do
     case Polls.create_poll(poll_params) do
       {:ok, poll} ->
         notify_parent({:saved, poll})
+        notify_subscribers("polls:#{poll.id}", {:saved, poll})
+        notify_subscribers("polls", :new)
 
         {:noreply,
          socket
@@ -108,4 +120,5 @@ defmodule PollingAppWeb.PollLive.FormComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+  defp notify_subscribers(channel, msg), do: PubSub.broadcast(PollingApp.PubSub, channel, msg)
 end

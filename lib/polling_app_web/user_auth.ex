@@ -1,4 +1,6 @@
 defmodule PollingAppWeb.UserAuth do
+  @moduledoc false
+
   use PollingAppWeb, :verified_routes
 
   import Plug.Conn

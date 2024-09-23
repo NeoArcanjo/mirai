@@ -18,6 +18,7 @@ defmodule PollingApp.Polls do
   """
   def list_polls do
     Registry.list(:polls)
+    |> Enum.reject(&is_nil/1)
   end
 
   @doc """
@@ -58,7 +59,32 @@ defmodule PollingApp.Polls do
     Registry.create(:polls, poll.id, poll)
     |> case do
       :ok -> {:ok, poll}
-      _ -> {:error, poll}
+      _error -> {:error, poll}
+    end
+  end
+
+  def vote(%{votes: votes, options: options} = poll, option_id, username) do
+    votes = [%{username: username} | votes]
+
+    options =
+      Enum.map(options, fn option ->
+        if option.id == option_id do
+          %{option | votes: option.votes + 1}
+        else
+          option
+        end
+      end)
+
+    poll
+    |> Poll.vote_changeset(%{votes: structs_to_maps(votes), options: structs_to_maps(options)})
+    |> Ecto.Changeset.apply_action(:update)
+    |> case do
+      {:ok, updated_poll} ->
+        Registry.update(:polls, poll.id, updated_poll)
+        {:ok, updated_poll}
+
+      _error ->
+        {:error, poll}
     end
   end
 
@@ -72,8 +98,17 @@ defmodule PollingApp.Polls do
       iex> update_poll(poll, %{field: bad_value})
 
   """
-  def update_poll(title, option) do
-    :ets.update_element(:polls, title, {3, Map.update(%{}, option, 1, &(&1 + 1))})
+  def update_poll(poll, attrs) do
+    {:ok, updated_poll} =
+      poll
+      |> Poll.changeset(attrs)
+      |> Ecto.Changeset.apply_action(:update)
+
+    Registry.update(:polls, poll.id, updated_poll)
+    |> case do
+      :ok -> {:ok, updated_poll}
+      _error -> {:error, updated_poll}
+    end
   end
 
   @doc """
@@ -88,9 +123,12 @@ defmodule PollingApp.Polls do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_poll(%Poll{title: title} = poll) do
-    IO.inspect(poll)
-    Registry.delete(:polls, title)
+  def delete_poll(%Poll{id: id}) do
+    Registry.delete(:polls, id)
+    |> case do
+      :ok -> {:ok, %Poll{}}
+      _error -> {:error, %Ecto.Changeset{}}
+    end
   end
 
   @doc """
@@ -105,4 +143,14 @@ defmodule PollingApp.Polls do
   def change_poll(%Poll{} = poll, attrs \\ %{}) do
     Poll.changeset(poll, attrs)
   end
+
+  defp structs_to_maps(structs), do: Enum.map(structs, &struct_to_map/1)
+
+  defp struct_to_map(struct) when is_struct(struct) do
+    struct
+    |> Map.from_struct()
+    |> Map.delete(:__meta__)
+  end
+
+  defp struct_to_map(map) when is_map(map), do: map
 end

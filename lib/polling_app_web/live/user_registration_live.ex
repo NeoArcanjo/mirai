@@ -57,7 +57,6 @@ defmodule PollingAppWeb.UserRegistrationLive do
       {:ok, user} ->
         changeset =
           Accounts.change_user_registration(user)
-          |> IO.inspect(label: "lib/polling_app_web/live/user_registration_live.ex:59")
 
         {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
 
@@ -67,9 +66,7 @@ defmodule PollingAppWeb.UserRegistrationLive do
   end
 
   def handle_event("validate", %{"user" => user_params}, socket) do
-    changeset =
-      Accounts.change_user_registration(%User{}, user_params)
-      |> IO.inspect(label: "lib/polling_app_web/live/user_registration_live.ex:69")
+    changeset = Accounts.change_user_registration(%User{}, user_params)
 
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end

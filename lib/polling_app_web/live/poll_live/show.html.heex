@@ -2,19 +2,25 @@
   <%= @poll.title %>
   <:subtitle><%= @poll.description %></:subtitle>
   <p><span class="text-zinc-400 text-sm">by <%= @poll.created_by %></span></p>
+  <p><%= @poll.total_votes %> votes</p>
   <%!-- show only if user is the poll creator --%>
   <:actions :if={@current_user.username == @poll.created_by}>
     <.link patch={~p"/polls/#{@poll}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit poll</.button>
+    </.link>
+
+    <.link phx-click={JS.push("delete", value: %{id: @poll.id})} data-confirm="Are you sure?">
+      <.button>Delete poll</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
   <:item :for={option <- @poll.options} title="Options">
-    <.form phx-submit="vote" class="flex gap-2">
-      <input type="hidden" name="poll_id" value={@poll.id} />
+    <.form for={@form} id={"poll-vote-form-#{option.id}"} phx-submit="vote" class="flex gap-2">
       <.input type="text" name="option" value={option.value} />
+      <span class="text-green-500"><%= option.votes %> votes</span>
+      <input type="hidden" name="option_id" value={option.id} />
       <input type="hidden" name="username" value={@current_user.username} />
       <.button type="submit">Vote</.button>
     </.form>
@@ -30,6 +36,7 @@
     title={@page_title}
     action={@live_action}
     poll={@poll}
+    username={@current_user.username}
     patch={~p"/polls/#{@poll}"}
   />
 </.modal>

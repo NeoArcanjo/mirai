@@ -1,22 +1,30 @@
 defmodule PollingApp.Polls.Vote do
+  @moduledoc """
+  The Vote schema.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
-  embedded_schema do
-    field :option, :string
-    field :username, :string
+  @required [:username]
+  @optional []
 
-    belongs_to :poll, PollingApp.Polls.Poll
+  embedded_schema do
+    field :username, :string
   end
 
   def changeset(vote, attrs) do
     vote
-    |> cast(attrs, [:option, :username, :poll_id])
-    |> validate_required([:option, :username, :poll_id])
-    |> set_id()
+    |> cast(attrs, @required ++ @optional)
+    |> validate_required(@required)
+    |> maybe_set_id()
   end
 
-  defp set_id(changeset) do
-    put_change(changeset, :id, Ecto.UUID.generate())
+  defp maybe_set_id(changeset) do
+    if get_field(changeset, :id) do
+      changeset
+    else
+      put_change(changeset, :id, Ecto.UUID.generate())
+    end
   end
 end

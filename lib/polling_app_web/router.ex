@@ -62,8 +62,6 @@ defmodule PollingAppWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{PollingAppWeb.UserAuth, :ensure_authenticated}] do
-      live "/users/settings", UserSettingsLive, :edit
-
       live "/", PollLive.Index, :index
       live "/polls", PollLive.Index, :index
       live "/polls/new", PollLive.Index, :new

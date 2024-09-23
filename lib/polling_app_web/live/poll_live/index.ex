@@ -1,4 +1,5 @@
 defmodule PollingAppWeb.PollLive.Index do
+  alias Phoenix.PubSub
   use PollingAppWeb, :live_view
 
   alias PollingApp.Polls
@@ -6,6 +7,7 @@ defmodule PollingAppWeb.PollLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: PubSub.subscribe(PollingApp.PubSub, "polls")
     {:ok, stream(socket, :polls, Polls.list_polls())}
   end
 
@@ -44,22 +46,33 @@ defmodule PollingAppWeb.PollLive.Index do
   end
 
   @impl true
+  def handle_info(:vote, socket) do
+    {:noreply, stream(socket, :polls, Polls.list_polls())}
+  end
+
+  def handle_info(:vote, socket) do
+    {:noreply, stream(socket, :polls, Polls.list_polls())}
+  end
+
+  def handle_info(:new, socket) do
+    {:noreply,
+     socket |> put_flash(:info, "New poll available") |> stream(:polls, Polls.list_polls())}
+  end
+
+  def handle_info(:updated, socket) do
+    {:noreply,
+     socket |> put_flash(:info, "Poll has been updated") |> stream(:polls, Polls.list_polls())}
+  end
+
+  def handle_info({:deleted, poll}, socket) do
+    {:noreply, socket |> put_flash(:info, "Poll has been deleted") |> stream_delete(:polls, poll)}
+  end
+
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     poll = Polls.get_poll(id)
     {:ok, _} = Polls.delete_poll(poll)
 
     {:noreply, stream_delete(socket, :polls, poll)}
-  end
-
-  @impl true
-  def handle_event(
-        "vote",
-        %{"poll_id" => poll_id, "option" => option, "username" => username},
-        socket
-      ) do
-    case Polls.vote(poll_id, option, username) do
-      :ok -> {:noreply, assign(socket, :polls, Polls.list_polls())}
-      :error -> {:noreply, socket}
-    end
   end
 end

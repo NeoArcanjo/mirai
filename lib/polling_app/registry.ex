@@ -1,4 +1,8 @@
 defmodule PollingApp.Registry do
+  @moduledoc """
+  This module defines the middleware for the data layer and the ETS table.
+  """
+
   alias PollingApp.DataLayer
   use GenServer
 
@@ -16,9 +20,7 @@ defmodule PollingApp.Registry do
   end
 
   @doc """
-  Looks up the bucket pid for `name` stored in `server`.
-
-  Returns `{:ok, pid}` if the bucket exists, `:error` otherwise.
+  Looks up a value in the ETS table.
   """
   def lookup(server, value) do
     # 2. Lookup is now done directly in ETS, without accessing the server
@@ -29,19 +31,29 @@ defmodule PollingApp.Registry do
   end
 
   @doc """
-  Ensures there is a bucket associated with the given `name` in `server`.
+  Creates a new entry in the registry.
   """
   def create(server, key, values) do
     GenServer.cast(server, {:create, key, values})
   end
 
   @doc """
-  Delete a value from registry
+  Updates an existing entry in the registry.
+  """
+  def update(server, key, values) do
+    GenServer.cast(server, {:update, key, values})
+  end
+
+  @doc """
+  Deletes an entry from the registry.
   """
   def delete(server, key) do
     GenServer.cast(server, {:delete, key})
   end
 
+  @doc """
+  Lists all entries in the registry.
+  """
   def list(server) do
     GenServer.call(server, :list)
   end
@@ -55,8 +67,6 @@ defmodule PollingApp.Registry do
     refs = %{}
     {:ok, {names, refs}}
   end
-
-  # 4. The previous handle_call callback for lookup was removed
 
   @impl true
   def handle_cast({:create, key, values}, {keys, refs}) do
@@ -79,22 +89,37 @@ defmodule PollingApp.Registry do
   end
 
   @impl true
-  def handle_cast({:delete, name}, {names, refs}) do
+  def handle_cast({:update, name, values}, {names, refs}) do
     case lookup(names, name) do
-      {:ok, _pid} ->
-        {name, refs} = Map.pop(refs, name)
-        :ets.delete(names, name)
+      {:ok, pid} ->
+        PollingApp.DataLayer.put(pid, name, values)
         {:noreply, {names, refs}}
 
       :error ->
+        # Do nothing
         {:noreply, {names, refs}}
     end
   end
 
+  @impl true
+  def handle_cast({:delete, key}, {keys, refs}) do
+    case lookup(keys, key) do
+      {:ok, pid} ->
+        DataLayer.remove(pid, key)
+        {key, refs} = Map.pop(refs, key)
+        :ets.delete(keys, key)
+        {:noreply, {keys, refs}}
+
+      :error ->
+        {:noreply, {keys, refs}}
+    end
+  end
+
+  @impl true
   def handle_call(:list, _from, {names, _refs} = state) do
     result =
       :ets.tab2list(names)
-      |> Enum.map(fn {key, pid} -> {key, DataLayer.get(pid, key)} end)
+      |> Enum.map(fn {key, pid} -> DataLayer.get(pid, key) end)
 
     {:reply, result, state}
   end

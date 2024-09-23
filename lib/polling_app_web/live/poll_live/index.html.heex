@@ -13,20 +13,8 @@
   row_click={fn {_id, poll} -> JS.navigate(~p"/polls/#{poll}") end}
 >
   <:col :let={{_id, poll}} label="Title"><%= poll.title %></:col>
-  <:action :let={{_id, poll}}>
-    <div class="sr-only">
-      <.link navigate={~p"/polls/#{poll}"}>Show</.link>
-    </div>
-    <.link patch={~p"/polls/#{poll}/edit"}>Edit</.link>
-  </:action>
-  <:action :let={{id, poll}}>
-    <.link
-      phx-click={JS.push("delete", value: %{id: poll.id}) |> hide("##{id}")}
-      data-confirm="Are you sure?"
-    >
-      Delete
-    </.link>
-  </:action>
+  <:col :let={{_id, poll}} label="Votes"><%= poll.total_votes %></:col>
+  <:col :let={{_id, poll}} label="Created by"><%= poll.created_by %></:col>
 </.table>
 
 <.modal :if={@live_action in [:new, :edit]} id="poll-modal" show on_cancel={JS.patch(~p"/polls")}>

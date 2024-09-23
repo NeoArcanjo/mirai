@@ -1,8 +1,13 @@
 defmodule PollingApp.Accounts.UserToken do
+  @moduledoc """
+  The UserToken schema.
+  """
+
   use Ecto.Schema
   import Ecto.Query
-  alias PollingApp.DataLayer
+
   alias PollingApp.Accounts.UserToken
+  alias PollingApp.DataLayer
   alias PollingApp.Registry
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -15,7 +20,7 @@ defmodule PollingApp.Accounts.UserToken do
   @reset_password_validity_in_days 1
   @confirm_validity_in_days 7
   @change_username_validity_in_days 7
-  @session_validity_in_days 60
+  # @session_validity_in_days 60
 
   embedded_schema do
     field :token, :binary

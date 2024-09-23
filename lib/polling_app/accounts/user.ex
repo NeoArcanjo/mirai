@@ -1,4 +1,8 @@
 defmodule PollingApp.Accounts.User do
+  @moduledoc """
+  The User schema.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -27,7 +31,7 @@ defmodule PollingApp.Accounts.User do
     user
     |> cast(attrs, [:username])
     |> validate_username(opts)
-    |> set_id()
+    |> maybe_set_id()
   end
 
   defp validate_username(changeset, _opts) do
@@ -63,7 +67,11 @@ defmodule PollingApp.Accounts.User do
     end
   end
 
-  defp set_id(changeset) do
-    put_change(changeset, :id, Ecto.UUID.generate())
+  defp maybe_set_id(changeset) do
+    if get_field(changeset, :id) do
+      changeset
+    else
+      put_change(changeset, :id, Ecto.UUID.generate())
+    end
   end
 end

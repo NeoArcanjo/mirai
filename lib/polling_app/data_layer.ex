@@ -1,4 +1,8 @@
 defmodule PollingApp.DataLayer do
+  @moduledoc """
+  This module defines the data layer for the application.
+  """
+
   use Agent
 
   @doc """
@@ -20,5 +24,9 @@ defmodule PollingApp.DataLayer do
   """
   def put(data, key, value) do
     Agent.update(data, &Map.put(&1, key, value))
+  end
+
+  def remove(data, key) do
+    Agent.update(data, &Map.delete(&1, key))
   end
 end
