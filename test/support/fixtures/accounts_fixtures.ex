@@ -1,31 +1,24 @@
 defmodule PollingApp.AccountsFixtures do
-  @moduledoc """
-  This module defines test helpers for creating
-  entities via the `PollingApp.Accounts` context.
-  """
-
-  def unique_user_email, do: "user#{System.unique_integer()}@example.com"
-  def valid_user_password, do: "hello world!"
-
-  def valid_user_attributes(attrs \\ %{}) do
-    Enum.into(attrs, %{
-      email: unique_user_email(),
-      password: valid_user_password()
-    })
-  end
+  alias PollingApp.Accounts
+  alias PollingApp.Accounts.User
 
   def user_fixture(attrs \\ %{}) do
     {:ok, user} =
-      attrs
-      |> valid_user_attributes()
-      |> PollingApp.Accounts.register_user()
+      %User{
+        id: Ecto.UUID.generate(),
+        username: "some_username"
+      }
+      |> Enum.into(attrs)
+      |> Accounts.register_user()
 
     user
   end
 
-  def extract_user_token(fun) do
-    {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
-    [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
-    token
+  def user_token_fixture(_attrs \\ %{}) do
+    user = user_fixture()
+
+    {:ok, user_token} = Accounts.generate_user_session_token(user)
+
+    user_token
   end
 end

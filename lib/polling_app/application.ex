@@ -7,6 +7,8 @@ defmodule PollingApp.Application do
 
   @impl true
   def start(_type, _args) do
+    start_agents()
+
     children = [
       PollingAppWeb.Telemetry,
       {DynamicSupervisor, name: PollingApp.DataLayerSupervisor, strategy: :one_for_one},
@@ -17,10 +19,7 @@ defmodule PollingApp.Application do
       # Start a worker by calling: PollingApp.Worker.start_link(arg)
       # {PollingApp.Worker, arg},
       # Start to serve requests, typically the last entry
-      PollingAppWeb.Endpoint,
-      Supervisor.child_spec({PollingApp.Registry, name: :users}, id: :users),
-      Supervisor.child_spec({PollingApp.Registry, name: :polls}, id: :polls),
-      Supervisor.child_spec({PollingApp.Registry, name: :sessions}, id: :sessions)
+      PollingAppWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -34,6 +33,22 @@ defmodule PollingApp.Application do
   @impl true
   def config_change(changed, _new, removed) do
     PollingAppWeb.Endpoint.config_change(changed, removed)
+    :ok
+  end
+
+  defp start_agents do
+    {:ok, _} = Registry.start_link(keys: :unique, name: PollingApp.Registry)
+
+    polls = {:via, Registry, {PollingApp.Registry, :polls}}
+
+    {:ok, _} = PollingApp.DataLayer.start_link(name: polls)
+
+    users = {:via, Registry, {PollingApp.Registry, :users}}
+    {:ok, _} = PollingApp.DataLayer.start_link(name: users)
+
+    sessions = {:via, Registry, {PollingApp.Registry, :sessions}}
+    {:ok, _} = PollingApp.DataLayer.start_link(name: sessions)
+
     :ok
   end
 end

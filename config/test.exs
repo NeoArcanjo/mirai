@@ -10,12 +10,6 @@ config :polling_app, PollingAppWeb.Endpoint,
   secret_key_base: "g5zy3maC8HFoGkgY0ADrTKg1Jbaomx6Z1ouk97uh8jK6VDGTfmcdazeisN5vPapY",
   server: false
 
-# In test we don't send emails
-config :polling_app, PollingApp.Mailer, adapter: Swoosh.Adapters.Test
-
-# Disable swoosh api client as it is only required for production adapters
-config :swoosh, :api_client, false
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 

@@ -3,7 +3,7 @@ defmodule PollingAppWeb.PollLive.Index do
   use PollingAppWeb, :live_view
 
   alias PollingApp.Polls
-  alias PollingApp.Polls.Poll
+  alias PollingApp.Polls.{Option, Poll}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -31,7 +31,7 @@ defmodule PollingAppWeb.PollLive.Index do
     socket
     |> assign(:page_title, "New Poll")
     |> assign(:username, current_user.username)
-    |> assign(:poll, %Poll{})
+    |> assign(:poll, %Poll{options: [%Option{}]})
   end
 
   defp apply_action(socket, :index, _params) do

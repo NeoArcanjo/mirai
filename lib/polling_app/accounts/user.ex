@@ -38,19 +38,7 @@ defmodule PollingApp.Accounts.User do
     changeset
     |> validate_required([:username])
     |> validate_length(:username, max: 160)
-
-    # |> maybe_validate_unique_username(opts)
   end
-
-  # defp maybe_validate_unique_username(changeset, opts) do
-  #   if Keyword.get(opts, :validate_username, true) do
-  #     changeset
-  #     |> unsafe_validate_unique(:username, PollingApp.Repo)
-  #     |> unique_constraint(:username)
-  #   else
-  #     changeset
-  #   end
-  # end
 
   @doc """
   A user changeset for changing the username.

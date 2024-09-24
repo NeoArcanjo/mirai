@@ -14,7 +14,7 @@ defmodule PollingAppWeb.PollLiveTest do
   end
 
   describe "Index" do
-    setup [:create_poll]
+    setup [:create_poll, :register_and_log_in_user]
 
     test "lists all polls", %{conn: conn, poll: poll} do
       {:ok, _index_live, html} = live(conn, ~p"/polls")
@@ -78,7 +78,7 @@ defmodule PollingAppWeb.PollLiveTest do
   end
 
   describe "Show" do
-    setup [:create_poll]
+    setup [:create_poll, :register_and_log_in_user]
 
     test "displays poll", %{conn: conn, poll: poll} do
       {:ok, _show_live, html} = live(conn, ~p"/polls/#{poll}")
@@ -108,6 +108,15 @@ defmodule PollingAppWeb.PollLiveTest do
       html = render(show_live)
       assert html =~ "Poll updated successfully"
       assert html =~ "some updated title"
+    end
+  end
+
+  describe "Not authenticated" do
+    setup [:create_poll]
+
+    test "redirects if not authenticated", %{conn: conn, poll: poll} do
+      {:error, {:redirect, %{flash: _flash, to: "/users/log_in"}}} =
+        live(conn, ~p"/polls/#{poll}")
     end
   end
 end
