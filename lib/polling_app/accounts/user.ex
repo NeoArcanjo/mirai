@@ -37,7 +37,10 @@ defmodule PollingApp.Accounts.User do
   defp validate_username(changeset, _opts) do
     changeset
     |> validate_required([:username])
-    |> validate_length(:username, max: 160)
+    |> validate_length(:username, max: 160, min: 5)
+    |> validate_format(:username, ~r/^[^\d][a-zA-Z0-9_]+$/,
+      message: "Must start with a letter.\nUse only letters, numbers and _"
+    )
   end
 
   @doc """

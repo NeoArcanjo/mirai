@@ -2,53 +2,70 @@ defmodule PollingAppWeb.UserRegistrationLiveTest do
   use PollingAppWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
 
-  alias PollingApp.Accounts
+  import PollingApp.AccountsFixtures
 
-  setup do
-    {:ok, user: %PollingApp.Accounts.User{}}
+  describe "Registration page" do
+    test "renders registration page", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/users/register")
+
+      assert html =~ "Register"
+      assert html =~ "Log in"
+    end
+
+    test "redirects if already logged in", %{conn: conn} do
+      result =
+        conn
+        |> log_in_user(user_fixture())
+        |> live(~p"/users/register")
+        |> follow_redirect(conn, "/")
+
+      assert {:ok, _conn} = result
+    end
+
+    test "renders errors for invalid data", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
+
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(user: %{"username" => "1one"})
+
+      assert result =~ "Register"
+      assert result =~ "Must start with a letter.\nUse only letters, numbers and _"
+      assert result =~ "should be at least 5 character"
+    end
   end
 
-  test "renders registration form", %{conn: conn} do
-    {:ok, _view, html} = live(conn, "~/users/register")
-    assert html =~ "Register for an account"
-    assert html =~ "Username"
-    assert html =~ "Create an account"
+  describe "register user" do
+    test "creates account and logs the user in", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
+
+      username = "test_user"
+      form = form(lv, "#registration_form", user: valid_user_attributes(username: username))
+      render_submit(form)
+      conn = follow_trigger_action(form, conn)
+
+      assert redirected_to(conn) == ~p"/"
+
+      # Now do a logged in request and assert on the menu
+      conn = get(conn, "/")
+      response = html_response(conn, 200)
+      assert response =~ username
+      assert response =~ "Log out"
+    end
   end
 
-  test "validates user input", %{conn: conn} do
-    {:ok, view, _html} = live(conn, "~/users/register")
+  describe "registration navigation" do
+    test "redirects to login page when the Log in button is clicked", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/register")
 
-    view
-    |> form("#registration_form", user: %{username: ""})
-    |> render_change()
+      {:ok, _login_live, login_html} =
+        lv
+        |> element(~s|main a:fl-contains("Log in")|)
+        |> render_click()
+        |> follow_redirect(conn, ~p"/users/log_in")
 
-    assert render(view) =~ "Oops, something went wrong! Please check the errors below."
-  end
-
-  test "registers user successfully", %{conn: conn} do
-    {:ok, view, _html} = live(conn, "~/users/register")
-
-    user_params = %{username: "valid_username"}
-    Accounts.register_user(user_params)
-
-    view
-    |> form("#registration_form", user: user_params)
-    |> render_submit()
-
-    assert render(view) =~ "Log in to your account now."
-  end
-
-  test "handles registration errors", %{conn: conn} do
-    {:ok, view, _html} = live(conn, "~/users/register")
-
-    user_params = %{username: ""}
-    Accounts.register_user(user_params)
-
-    view
-    |> form("#registration_form", user: user_params)
-    |> render_submit()
-    |> IO.inspect(label: "test/polling_app_web/live/user_registration_live_test.exs:50")
-
-    assert render(view) =~ "Oops, something went wrong! Please check the errors below."
+      assert login_html =~ "Log in"
+    end
   end
 end

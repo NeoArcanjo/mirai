@@ -10,7 +10,6 @@ defmodule PollingAppWeb.UserLoginLiveTest do
 
       assert html =~ "Log in"
       assert html =~ "Register"
-      assert html =~ "Forgot your password?"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -26,19 +25,17 @@ defmodule PollingAppWeb.UserLoginLiveTest do
 
   describe "user login" do
     test "redirects if user login with valid credentials", %{conn: conn} do
-      password = "123456789abcd"
-      user = user_fixture(%{password: password})
+      user = user_fixture(%{username: "test_user"})
 
       {:ok, lv, _html} = live(conn, ~p"/users/log_in")
 
       form =
-        form(lv, "#login_form",
-          user: %{username: user.username, password: password, remember_me: true}
-        )
+        form(lv, "#login_form", user: %{username: user.username, remember_me: true})
 
       conn = submit_form(form, conn)
 
       assert redirected_to(conn) == ~p"/"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) == "Welcome back!"
     end
 
     test "redirects to login page with a flash error if there are no valid credentials", %{
@@ -51,7 +48,7 @@ defmodule PollingAppWeb.UserLoginLiveTest do
 
       conn = submit_form(form, conn)
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid username or password"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid username"
 
       assert redirected_to(conn) == "/users/log_in"
     end
@@ -68,20 +65,6 @@ defmodule PollingAppWeb.UserLoginLiveTest do
         |> follow_redirect(conn, ~p"/users/register")
 
       assert login_html =~ "Register"
-    end
-
-    test "redirects to forgot password page when the Forgot Password button is clicked", %{
-      conn: conn
-    } do
-      {:ok, lv, _html} = live(conn, ~p"/users/log_in")
-
-      {:ok, conn} =
-        lv
-        |> element(~s|main a:fl-contains("Forgot your password?")|)
-        |> render_click()
-        |> follow_redirect(conn, ~p"/users/reset_password")
-
-      assert conn.resp_body =~ "Forgot your password?"
     end
   end
 end

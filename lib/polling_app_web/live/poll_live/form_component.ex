@@ -81,7 +81,13 @@ defmodule PollingAppWeb.PollLive.FormComponent do
   end
 
   def handle_event("save", %{"poll" => poll_params}, socket) do
-    poll_params = Map.put(poll_params, "created_by", socket.assigns.username)
+    poll_params =
+      if socket.assigns.action == :new do
+        Map.put(poll_params, "created_by", socket.assigns.username)
+      else
+        poll_params
+      end
+
     save_poll(socket, socket.assigns.action, poll_params)
   end
 

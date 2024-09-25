@@ -2,7 +2,6 @@ defmodule PollingAppWeb.UserSessionControllerTest do
   use PollingAppWeb.ConnCase, async: true
 
   alias PollingApp.Accounts
-  alias PollingAppWeb.Router.Helpers, as: Routes
 
   setup do
     {:ok, user: %PollingApp.Accounts.User{username: "test_user"}}
@@ -14,14 +13,15 @@ defmodule PollingAppWeb.UserSessionControllerTest do
     conn =
       post(
         conn,
-        Routes.user_session_path(conn, :create, %{
+        ~p"/users/log_in",
+        %{
           "_action" => "registered",
           "user" => %{"username" => user.username}
-        })
+        }
       )
 
-    assert get_flash(conn, :info) == "Account created successfully!"
-    assert redirected_to(conn) == Routes.page_path(conn, :index)
+    assert Phoenix.Flash.get(conn.assigns.flash, :info) == "Account created successfully!"
+    assert redirected_to(conn) == "/"
   end
 
   test "creates session for existing user", %{conn: conn, user: user} do
@@ -30,27 +30,30 @@ defmodule PollingAppWeb.UserSessionControllerTest do
     conn =
       post(
         conn,
-        Routes.user_session_path(conn, :create, %{"user" => %{"username" => user.username}})
+        ~p"/users/log_in",
+        %{"user" => %{"username" => user.username}}
       )
 
-    assert get_flash(conn, :info) == "Welcome back!"
-    assert redirected_to(conn) == Routes.page_path(conn, :index)
+    assert Phoenix.Flash.get(conn.assigns.flash, :info) == "Welcome back!"
+    assert conn.status == 302
+    assert redirected_to(conn) == "/"
   end
 
   test "fails to create session for non-existent user", %{conn: conn} do
     conn =
       post(
         conn,
-        Routes.user_session_path(conn, :create, %{"user" => %{"username" => "non_existent_user"}})
+        ~p"/users/log_in",
+        %{"user" => %{"username" => "non_existent_user"}}
       )
 
-    assert get_flash(conn, :error) == "Invalid username"
-    assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+    assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid username"
+    assert redirected_to(conn) == "/users/log_in"
   end
 
   test "deletes session", %{conn: conn} do
-    conn = delete(conn, Routes.user_session_path(conn, :delete))
-    assert get_flash(conn, :info) == "Logged out successfully."
-    assert redirected_to(conn) == Routes.page_path(conn, :index)
+    conn = delete(conn, ~p"/users/log_out")
+    assert Phoenix.Flash.get(conn.assigns.flash, :info) == "Logged out successfully."
+    assert redirected_to(conn) == "/users/log_in"
   end
 end

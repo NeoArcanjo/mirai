@@ -69,7 +69,7 @@ defmodule PollingAppWeb.PollLive.Show do
       socket
       |> put_flash(:info, "Poll has been deleted")
       |> stream(:polls, Polls.list_polls())
-      |> push_navigate(to: ~p"/")
+      |> push_navigate(to: ~p"/polls")
 
     {:noreply, socket}
   end

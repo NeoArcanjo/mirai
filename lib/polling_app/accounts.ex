@@ -56,8 +56,8 @@ defmodule PollingApp.Accounts do
 
         {:ok, user}
 
-      _ ->
-        {:error, :fail}
+      changeset ->
+        {:error, changeset}
     end
   end
 
@@ -117,7 +117,7 @@ defmodule PollingApp.Accounts do
     |> DataLayer.delete(token)
   end
 
-  defp users_pid() do
+  defp users_pid do
     Registry.lookup(DataRegistry, :users)
     |> case do
       [{pid, _}] -> pid
@@ -125,7 +125,7 @@ defmodule PollingApp.Accounts do
     end
   end
 
-  defp sessions_pid() do
+  defp sessions_pid do
     Registry.lookup(DataRegistry, :sessions)
     |> case do
       [{pid, _}] -> pid

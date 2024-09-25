@@ -5,7 +5,7 @@ defmodule PollingApp.AccountsTest do
 
   describe "get_user_by_username/1" do
     test "returns the user when the user exists" do
-      username = "foo"
+      username = "foo_bar"
       attrs = %{username: username}
       {:ok, user} = Accounts.register_user(attrs)
 
@@ -19,14 +19,28 @@ defmodule PollingApp.AccountsTest do
 
   describe "register_user/1" do
     test "registers a user with valid attributes" do
-      attrs = %{username: "new_user", password: "password123"}
+      attrs = %{username: "new_user"}
       assert {:ok, %User{} = user} = Accounts.register_user(attrs)
       assert user.username == "new_user"
     end
 
     test "returns error with invalid attributes" do
-      attrs = %{username: 1}
-      assert {:error, :fail} = Accounts.register_user(attrs)
+      attrs = %{username: "1"}
+
+      assert {:error, changeset_error} = Accounts.register_user(attrs)
+
+      assert changeset_error.errors == [
+               {
+                 :username,
+                 {
+                   "Must start with a letter.\nUse only letters, numbers and _",
+                   [validation: :format]
+                 }
+               },
+               {:username,
+                {"should be at least %{count} character(s)",
+                 [count: 5, validation: :length, kind: :min, type: :string]}}
+             ]
     end
   end
 

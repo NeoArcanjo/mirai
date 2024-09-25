@@ -166,7 +166,7 @@ defmodule PollingApp.Polls do
       iex> #{__MODULE__}.list_polls()
       []
   """
-  def reset() do
+  def reset do
     DataLayer.clear(polls_pid())
   end
 
@@ -180,7 +180,7 @@ defmodule PollingApp.Polls do
 
   defp struct_to_map(map) when is_map(map), do: map
 
-  defp polls_pid() do
+  defp polls_pid do
     Registry.lookup(DataRegistry, :polls)
     |> case do
       [{pid, _}] -> pid

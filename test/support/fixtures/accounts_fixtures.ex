@@ -1,14 +1,14 @@
 defmodule PollingApp.AccountsFixtures do
+  @moduledoc false
   alias PollingApp.Accounts
-  alias PollingApp.Accounts.User
 
   def user_fixture(attrs \\ %{}) do
     {:ok, user} =
-      %User{
+      attrs
+      |> Enum.into(%{
         id: Ecto.UUID.generate(),
         username: "some_username"
-      }
-      |> Enum.into(attrs)
+      })
       |> Accounts.register_user()
 
     user
@@ -20,5 +20,11 @@ defmodule PollingApp.AccountsFixtures do
     {:ok, user_token} = Accounts.generate_user_session_token(user)
 
     user_token
+  end
+
+  def valid_user_attributes(attrs \\ %{}) do
+    Enum.into(attrs, %{
+      username: "some_username"
+    })
   end
 end
